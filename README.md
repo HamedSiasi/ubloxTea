@@ -36,7 +36,7 @@
 
 `git clone https://github.com/HamedSiasi/ubloxTea`
 
-`cd saraTest`
+`cd ubloxTea`
 
 `python testSetup.py`
 
