@@ -1,0 +1,2 @@
+Fill.text,Fill.data,Fill.bss,Misc.text,Misc.data,Misc.bss,TESTS/mbed_drivers.text,TESTS/mbed_drivers.data,TESTS/mbed_drivers.bss,core/hal.text,core/hal.data,core/hal.bss,core/rtos.text,core/rtos.data,core/rtos.bss,frameworks/greentea-client.text,frameworks/greentea-client.data,frameworks/greentea-client.bss,frameworks/utest.text,frameworks/utest.data,frameworks/utest.bss,total_static_ram,allocated_heap,allocated_stack,total_ram,total_flash
+43,0,26,5133,115,188,772,4,184,6768,16,435,5147,24,970,1096,36,64,4645,41,369,2472,10580,3072,16124,23840

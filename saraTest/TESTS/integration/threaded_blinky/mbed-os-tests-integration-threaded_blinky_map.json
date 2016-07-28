@@ -1,0 +1,67 @@
+[
+    {
+        "module": "Fill", 
+        "size": {
+            ".data": 0, 
+            ".bss": 19, 
+            ".text": 45
+        }
+    }, 
+    {
+        "module": "Misc", 
+        "size": {
+            ".data": 112, 
+            ".bss": 188, 
+            ".text": 6504
+        }
+    }, 
+    {
+        "module": "TESTS/integration", 
+        "size": {
+            ".data": 4, 
+            ".bss": 24, 
+            ".text": 232
+        }
+    }, 
+    {
+        "module": "core/hal", 
+        "size": {
+            ".data": 16, 
+            ".bss": 435, 
+            ".text": 6788
+        }
+    }, 
+    {
+        "module": "core/rtos", 
+        "size": {
+            ".data": 24, 
+            ".bss": 970, 
+            ".text": 5147
+        }
+    }, 
+    {
+        "module": "frameworks/greentea-client", 
+        "size": {
+            ".data": 32, 
+            ".bss": 64, 
+            ".text": 1048
+        }
+    }, 
+    {
+        "module": "frameworks/utest", 
+        "size": {
+            ".data": 36, 
+            ".bss": 296, 
+            ".text": 2197
+        }
+    }, 
+    {
+        "summary": {
+            "total_flash": 22185, 
+            "allocated_stack": 3072, 
+            "total_static_ram": 2220, 
+            "total_ram": 16128, 
+            "allocated_heap": 10836
+        }
+    }
+]
