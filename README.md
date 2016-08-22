@@ -1,36 +1,22 @@
+# If You Do Not Have An Existing Project
 
+If you do not have an existing mbed project that you want to test, proceed as follows:
 
-
-`for new project start from point (A)`
-
-`for an existing project just comment main() and start from point (B)`
-
-`(A)`
-
-`git clone https://github.com/HamedSiasi/mbed-os-ublox-test`
+`git clone https://github.com/u-blox/mbed-os-ublox-test`
 
 `cd mbed-os-ublox-test`
 
 `mbed update`
 
-`cd mbed-os`
-
-`mbed update workshop-ublox`
-
-`cd core`
-
-`git checkout master`
-
-`mbed update`
-
-`cd ../..`
-
 `mbed target SARA_NBIOT_EVK`
 
 `mbed toolchain GCC_ARM`
 
+Then continue as below.
 
-`(B)`
+# For An Existing Project
+
+If you have an existing project that you want to test, `cd` to it and `#ifdef`-out your existing `main()`, then:
 
 `mbed test -c`
 
@@ -40,6 +26,8 @@
 
 `python testSetup.py`
 
-`Y Enter`
+`Y <enter>`
+
+Edit `testRun.py` and, near the bottom of the file, change `COM4` to be the COM port where your SARA EVK's USB port is connected, then:
 
 `python testRun.py`
