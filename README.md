@@ -18,8 +18,6 @@ Then continue as below.
 
 If you have an existing project that you want to test, `cd` to it and `#ifdef`-out your existing `main()`, then:
 
-`mbed test -c`
-
 `git clone https://github.com/HamedSiasi/ubloxTea`
 
 `cd ubloxTea/saraTest`
@@ -27,6 +25,10 @@ If you have an existing project that you want to test, `cd` to it and `#ifdef`-o
 `python testSetup.py`
 
 `Y <enter>`
+
+Then compile the tests with:
+
+`mbed test -c`
 
 Edit `testRun.py` and, near the bottom of the file, change `COM4` to be the COM port where your SARA EVK's USB port is connected, then:
 
