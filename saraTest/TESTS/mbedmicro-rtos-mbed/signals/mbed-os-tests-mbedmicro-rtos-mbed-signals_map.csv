@@ -1,2 +1,0 @@
-Fill.text,Fill.data,Fill.bss,Misc.text,Misc.data,Misc.bss,TESTS/mbedmicro-rtos-mbed.text,TESTS/mbedmicro-rtos-mbed.data,TESTS/mbedmicro-rtos-mbed.bss,core/hal.text,core/hal.data,core/hal.bss,core/rtos.text,core/rtos.data,core/rtos.bss,frameworks/greentea-client.text,frameworks/greentea-client.data,frameworks/greentea-client.bss,frameworks/utest.text,frameworks/utest.data,frameworks/utest.bss,total_static_ram,allocated_heap,allocated_stack,total_ram,total_flash
-50,0,23,6504,112,188,564,4,28,6788,16,435,6518,24,970,1052,32,64,2197,36,296,2228,10828,3072,16128,23897
