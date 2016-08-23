@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# saraTestRun.py
+# testRun.py
 import sys, os, time, threading, serial
 import multiprocessing
 import subprocess
@@ -125,7 +125,7 @@ def flash():
 def listen():
         abort_after = 5 
         start = time.time()
-        ser = serial.Serial(port="COM4",baudrate=9600, timeout=1)
+        ser = serial.Serial(port="COM124",baudrate=9600, timeout=1)
         while True:
                 delta = time.time() - start
                 if delta >= abort_after:
@@ -181,4 +181,4 @@ if __name__ == "__main__":
                 printResults()
         except:
                 print "oops something went wrong ..."
-                print "python saraTestSetup.py"
+                print "python testRun.py"
