@@ -30,6 +30,6 @@ Then compile the tests with:
 
 `mbed test -c --continue-on-build-fail`
 
-Edit `testRun.py` and, near the bottom of the file, change `COM4` to be the COM port where your SARA EVK's USB port is connected, then:
+Edit `testRun.py` and, near the bottom of the file, change the `COM` port to be the port where your SARA EVK's USB port is connected, then:
 
 `python testRun.py`
