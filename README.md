@@ -30,6 +30,8 @@ Then compile the tests with:
 
 `mbed test -c --continue-on-build-fail`
 
+Note: you will always need to specify `-c` as the test case source is copied before being compiled and so timestamps won't work.
+
 Edit `testRun.py` and, near the bottom of the file, change the `COM` port to be the port where your SARA EVK's USB port is connected, then:
 
 `python testRun.py`
