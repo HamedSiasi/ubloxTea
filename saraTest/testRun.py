@@ -97,13 +97,33 @@ def listen():
                     numRuns = len(tests[idx]["runs"])
                     if numRuns > 0:
                         # NOTE: the pass/fail count captured here is cumulative across runs of the same test
-                        # but I have also seen it jump (i.e. intermediate steps are not reported)
+                        # but I have also seen it jump (i.e. intermediate steps are not reported), so
+                        # grab the result from the end
                         tests[idx]["runs"][numRuns - 1]["pass"] = int(parts[2])
-                        tests[idx]["runs"][numRuns - 1]["fail"] = int(parts[3].split("}}")[0])                
+                        tests[idx]["runs"][numRuns - 1]["fail"] = int(parts[3].split("}}")[0])
+
+            # Some test cases check that failures are caused, i.e. they come up as failures and that is the
+            # intended outcome.  So that we don't keep thinking the darned things are a problem, capture
+            # the test cases summary and, if the number of passes is equal to the number of tests and the
+            # number of failures is zero, make sure that the pass count for each test is at max. and the
+            # fail count is zero
+            # Can only realistically do this if each test case is run once (because not all of the intermediate
+            # runs are always reported we don't know know how many runs represent a pass)
+            if len(parts) > 2 and "{{__testcase_summary" in parts[0] and "}}" in parts[2]:
+                if int(parts[1]) == numTests and int(parts[2].split("}}")[0]) == 0:
+                    runOnce = True
+                    for test in tests:
+                        if len(test["runs"]) != 1:
+                            runOnce = False
+                    if runOnce:
+                        for test in tests:
+                            test["runs"][0]["pass"] = 1
+                            test["runs"][0]["fail"] = 0
+                state += 1
 
     return tests
 
-# Given an associative array (tests), find the item for which the key 'name' matches the parameter name
+# Given an associative array (tests[]), find the item for which the key 'name' matches the parameter name
 def getIndex(name, tests):
     retValue = -1
     for index, test in enumerate(tests):
@@ -152,8 +172,8 @@ def printResults():
     print "Run(s): {0}".format(totalRuns)
     print "Passed: {0} ({1}%)".format(totalPasses, totalPasses * 100 / totalRuns)
     print "Failed: {0} ({1}%)".format(totalFails, totalFails * 100 / totalRuns)
-    print "Did not run: {0} ({1}%)".format(totalNotRuns, totalNotRuns * 100 / totalRuns)
     print "No result: {0} ({1}%)".format(totalInconclusive, totalInconclusive * 100 / totalRuns)
+    print "Tests that did not run: {0}".format(totalNotRuns)
 
 # main()
 if __name__ == "__main__":
