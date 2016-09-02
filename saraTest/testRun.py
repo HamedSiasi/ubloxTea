@@ -30,6 +30,7 @@ def findBinaries():
                 binary["name"] = fileName
                 binary["path"] = os.path.join(root, fileName)
                 binary["skipped"] = False
+                binary["badExit"] = False
                 binary["tests"] = {}
                 if binary["name"] in skipBinariesTests:
                     binary["skipped"] = True
@@ -41,7 +42,7 @@ def findBinaries():
 def loadAndRun():
     for index, binary in enumerate(binaries):
         subprocess.call("FlashErase.exe -c A -s e7000 -l 10000 -d -f " + binary["path"], shell = True)
-        binaries[index]["tests"] = listen(binary["skipped"])
+        binaries[index]["tests"] = listen(binary)
 
 # Listen to the serial output to ascertain test progress
 #
@@ -68,8 +69,9 @@ def loadAndRun():
 #{{__testcase_summary;2;0}}
 #{{end;success}}
 #{{__exit;0}}
-def listen(listOnly):
+def listen(binary):
     stopNow = False
+    listOnly = False
     numTests = 0
     tests = []
     start = time.time()
@@ -77,6 +79,9 @@ def listen(listOnly):
     line = ""
     ser = serial.Serial(port = "COM124", baudrate = 9600, timeout = 1)
     
+    if binary["skipped"]:
+        listOnly = True
+        
     while time.time() - start < testCaseTimeoutSeconds and not ("{{__exit" in line and "}}" in line) and not stopNow:
         line = ser.readline()
         print line
@@ -89,10 +94,14 @@ def listen(listOnly):
             else:
                 if len(parts) > 1 and "{{__testcase_count" in parts[0] and "}}" in parts[1]:
                     numTests = int(parts[1].split("}}")[0])
+                # Some test cases don't emit a count, they just skip straight to listing the test names
+                if len(parts) == 1 and ">>> Running " in parts[0] and "test cases..." in parts[0]:
+                    numTests = -1
+                    state += 1
                     
         # Next grab the names of the test cases from the list at the start
         if state == 1:
-            if len(tests) == numTests:
+            if numTests >= 0 and len(tests) == numTests:
                 state += 1
                 if listOnly:
                     stopNow = True
@@ -106,6 +115,12 @@ def listen(listOnly):
                     if testName in skipTests:
                         test["skipped"] = True
                     tests.append(test)
+                #  Catch the case where we never had a count at the outset
+                if len(parts) == 1 and ">>> Running case " in parts[0] and "..." in parts[0]:
+                    numTests = len(tests)
+                    state += 1
+                    if listOnly:
+                        stopNow = True
 
         # Next grab the result of having started and finished each test
         if state == 2 and not stopNow:
@@ -131,8 +146,8 @@ def listen(listOnly):
             # the test cases summary and, if the number of passes is equal to the number of tests and the
             # number of failures is zero, make sure that the pass count for each test is at max. and the
             # fail count is zero
-            # Can only realistically do this if each test case is run once (because not all of the intermediate
-            # runs are always reported we don't know know how many runs represent a pass)
+            # Can only realistically do this if each test case is run once (because we don't know know
+            # how many runs represent a pass)
             if len(parts) > 2 and "{{__testcase_summary" in parts[0] and "}}" in parts[2]:
                 if int(parts[1]) == numTests and int(parts[2].split("}}")[0]) == 0:
                     runOnce = True
@@ -144,10 +159,13 @@ def listen(listOnly):
                             test["runs"][0]["pass"] = 1
                             test["runs"][0]["fail"] = 0
                 state += 1
+    # If we've hit the exit line, check that the exit code is zero.  If it is not, flag the test as "bad exit"
+    if "{{__exit" in line and "}}" in line and len(parts) > 1 and not int(parts[1].split("}}")[0]) == 0:
+        binary["badExit"] = True
 
     return tests
 
-# Given an associative array (tests[]), find the item for which the key 'name' matches the parameter name
+# Given an associative array (tests[]), find the item for which the key "name" matches the parameter name
 def getIndex(name, tests):
     retValue = -1
     for index, test in enumerate(tests):
@@ -164,48 +182,61 @@ def printResults():
     totalNotRuns = 0
     totalSkipped = 0
     totalInconclusive = 0
+    totalUnstructuredOutput = 0
+    totalBadExit = 0
     table = []
     for binary in binaries:
-        for test in binary["tests"]:
-            if not test["skipped"]:
-                totalTests += 1
-                passes = 0
-                fails = 0
-                runs = len(test["runs"])
-                if runs > 0:
-                    passes = test["runs"][runs - 1]["pass"]
-                    fails = test["runs"][runs - 1]["fail"]
-                    inconclusive = runs - (passes + fails)
-                    # Sometimes the intermediate runs are not reported, so it is possible to
-                    # get 1 run with 10 passes.  It is clearer here to report the number
-                    # of runs including these intermediates
-                    if inconclusive > 0:
-                        totalInconclusive += inconclusive
-                    else:
-                        runs = passes + fails
-                    totalRuns += runs
-                else:
-                    totalNotRuns += 1
-            else:
-                passes = 0
-                fails = 0
+        badExitText = ""
+        if binary["badExit"]:
+            totalBadExit += 1
+            badExitText = "x"
+        if len(binary["tests"]) > 0:
+            for test in binary["tests"]:
                 runs = 0
-                totalSkipped += 1
-            entry = [totalTests, binary["name"].split(".bin")[0], test["name"], runs, test["skipped"], passes, fails]
+                passes = 0
+                fails = 0
+                notRuns = 0
+                inconclusive = 0
+                if not test["skipped"]:
+                    totalTests += 1
+                    if len(test["runs"]) > 0:
+                        for run in test["runs"]:
+                            runs += 1
+                            passes += run["pass"]
+                            fails += run["fail"]
+                        if passes == 0 and fails == 0:
+                            inconclusive += 1
+                    else:
+                        notRuns += 1
+                else:
+                    totalSkipped += 1
+                skipText = ""
+                if test["skipped"]:
+                    skipText = "x"
+                entry = [totalTests, binary["name"].split(".bin")[0], test["name"], runs, skipText, passes, fails, badExitText]
+                table.append(entry)
+                totalRuns += runs
+                totalPasses += passes
+                totalFails += fails
+                totalNotRuns += notRuns
+                totalInconclusive += inconclusive
+        else:
+            totalUnstructuredOutput += 1
+            entry = ["--", binary["name"].split(".bin")[0], "[unstructured test output]", "", "", "", "", badExitText]
             table.append(entry)
-            totalPasses += passes
-            totalFails += fails
     print ""
-    print tabulate(table, headers=["", "Image", "Test", "Runs", "Skipped", "Passes", "Fails"], tablefmt = "orgtbl")
+    print tabulate(table, headers=["", "Image", "Test", "Runs", "Skip?", "Passes", "Fails", "Bad Exit?"], tablefmt = "orgtbl")
     print ""
     print "Build(s): {0}".format(len(binaries))
     print "Test(s): {0}".format(totalTests)
     print "Run(s): {0}".format(totalRuns)
-    print "Passed: {0} ({1}%)".format(totalPasses, totalPasses * 100 / totalRuns)
-    print "Failed: {0} ({1}%)".format(totalFails, totalFails * 100 / totalRuns)
+    print "Passed: {0} ({1}%)".format(totalPasses, totalPasses * 100 / (totalPasses + totalFails))
+    print "Failed: {0} ({1}%)".format(totalFails, totalFails * 100 / (totalPasses + totalFails))
     print "No result: {0} ({1}%)".format(totalInconclusive, totalInconclusive * 100 / totalRuns)
     print "Skipped: {0}".format(totalSkipped)
     print "Tests that should have run and did not: {0}".format(totalNotRuns)
+    print "Builds that did not emit structured output: {0}".format(totalUnstructuredOutput)
+    print "Builds that did not exit cleanly: {0}".format(totalBadExit)
 
 # main()
 if __name__ == "__main__":
